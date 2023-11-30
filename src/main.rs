@@ -1,20 +1,24 @@
 use std::{
-    io::{self, BufRead, BufReader},
+    io::{self, BufRead, BufReader, Write},
     net::{TcpListener, TcpStream},
 };
 
-fn handle_client(stream: TcpStream) {
-    let stream = BufReader::new(stream);
-    for payload in stream.lines() {
+fn handle_client(mut stream: TcpStream) -> io::Result<()> {
+    let reader = BufReader::new(stream.try_clone()?);
+
+    for payload in reader.lines() {
         match payload {
             Ok(data) => {
                 println!("Incoming: {}", data);
+                let _ = stream.write(format!("{}\n", data).as_bytes());
             }
             Err(data) => {
-                println!("ERROR: {}", data)
+                println!("ERROR: {}", data);
             }
         }
     }
+
+    Ok(())
 }
 
 fn main() -> std::io::Result<()> {
@@ -30,7 +34,7 @@ fn main() -> std::io::Result<()> {
         match stream {
             Ok(s) => {
                 // do something with the TcpStream
-                handle_client(s);
+                let _ = handle_client(s);
             }
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
                 // wait until network socket is ready, typically implemented
