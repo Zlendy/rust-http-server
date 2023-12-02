@@ -6,15 +6,29 @@ use std::{
 fn handle_client(mut stream: TcpStream) -> io::Result<()> {
     let reader = BufReader::new(stream.try_clone()?);
 
-    for payload in reader.lines() {
-        match payload {
-            Ok(data) => {
-                println!("Incoming: {}", data);
-                let _ = stream.write(format!("{}\n", data).as_bytes());
-            }
-            Err(data) => {
-                println!("ERROR: {}", data);
-            }
+    let http_request: Vec<String> = reader
+        .lines()
+        .map(|result| result.unwrap_or_default())
+        .take_while(|line| !line.is_empty())
+        .collect();
+
+    println!("Request: {:#?}", http_request);
+
+    let http_response: Vec<String> = [
+        // TODO: Dynamic response
+        "HTTP/1.1 200 OK",
+        "Server: Rust",
+        "Content-Type: text/plain",
+        "",
+        "Hello, world!",
+    ]
+    .map(|line| String::from(line))
+    .to_vec();
+
+    match stream.write(http_response.join("\n").as_bytes()) {
+        Ok(_) => {}
+        Err(data) => {
+            println!("{:#?}", data);
         }
     }
 
@@ -22,7 +36,7 @@ fn handle_client(mut stream: TcpStream) -> io::Result<()> {
 }
 
 fn main() -> std::io::Result<()> {
-    let address = "127.0.0.1:8080";
+    let address = "0.0.0.0:8080";
     let listener = TcpListener::bind(address)?;
     listener
         .set_nonblocking(true)
