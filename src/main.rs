@@ -21,6 +21,16 @@ const HTTP_405: [&str; 5] = [
     "This server only accepts GET requests",
 ];
 
+fn get_mime(extension: &str) -> &str {
+    match extension {
+        "html" => "text/html",
+        "htm" => "text/html",
+        "css" => "text/css",
+        "js" => "text/javascript",
+        _ => "text/plain",
+    }
+}
+
 fn slice_to_bytes_vec(slice: Vec<String>) -> Vec<u8> {
     return slice.join("\n").as_bytes().to_owned();
 }
@@ -81,7 +91,10 @@ fn handle_client(mut stream: TcpStream) -> io::Result<()> {
 
     match read_file_vec(format!("./public{}", http_path).as_str()) {
         Ok(data) => {
-            let payload = http_200("text/html", vec![data.lines().collect()]);
+            let payload = http_200(
+                get_mime(http_path.split(".").last().unwrap_or_default()),
+                vec![data.lines().collect()],
+            );
             write_response(&mut stream, payload);
         }
         Err(_) => {
