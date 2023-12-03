@@ -1,39 +1,15 @@
+mod modules;
+
 use std::{
-    fs,
     io::{self, BufRead, BufReader, Write},
     net::{TcpListener, TcpStream},
-    path::Path,
 };
 
-const HTTP_404: [&str; 5] = [
-    "HTTP/1.1 404 Not found",
-    "Server: Rust",
-    "Content-Type: text/plain",
-    "",
-    "The requested resource was not found on this server",
-];
-
-const HTTP_405: [&str; 5] = [
-    "HTTP/1.1 405 Method Not Allowed",
-    "Server: Rust",
-    "Content-Type: text/plain",
-    "",
-    "This server only accepts GET requests",
-];
-
-fn get_mime(extension: &str) -> &str {
-    match extension {
-        "html" => "text/html",
-        "htm" => "text/html",
-        "css" => "text/css",
-        "js" => "text/javascript",
-        _ => "text/plain",
-    }
-}
-
-fn slice_to_bytes_vec(slice: Vec<String>) -> Vec<u8> {
-    return slice.join("\n").as_bytes().to_owned();
-}
+use crate::modules::{
+    file::{get_mime, read_file_vec},
+    http::{http_200, HTTP_404, HTTP_405},
+    vec::{slice_to_bytes_vec, slice_to_vec},
+};
 
 fn write_response(stream: &mut TcpStream, payload: Vec<String>) {
     match stream.write(slice_to_bytes_vec(payload).as_slice()) {
@@ -42,33 +18,6 @@ fn write_response(stream: &mut TcpStream, payload: Vec<String>) {
             println!("{:#?}", data);
         }
     }
-}
-
-fn http_200(content_type: &str, mut data: Vec<String>) -> Vec<String> {
-    let mut header = [
-        "HTTP/1.1 200 OK",
-        "Server: Rust",
-        format!("Content-Type: {}", content_type).as_str(),
-        "",
-    ]
-    .map(|line| line.to_string())
-    .to_vec();
-
-    header.append(&mut data);
-
-    return header;
-}
-
-fn read_file_vec(filepath: &str) -> Result<String, Box<dyn std::error::Error>> {
-    // TODO: Clean filepath
-    let path = Path::new(filepath);
-    // println!("PATH: {}", path.to_string_lossy());
-    let data = fs::read_to_string(path)?;
-    Ok(data)
-}
-
-fn slice_to_vec(slice: &[&str]) -> Vec<String> {
-    slice.iter().map(|line| line.to_string()).collect()
 }
 
 fn handle_client(mut stream: TcpStream) -> io::Result<()> {
