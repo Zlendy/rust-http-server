@@ -1,12 +1,18 @@
 use std::{fs, path::Path};
 
-pub fn get_mime(extension: &str) -> &str {
-    match extension {
-        "html" => "text/html",
-        "htm" => "text/html",
-        "css" => "text/css",
-        "js" => "text/javascript",
-        _ => "text/plain",
+pub mod mime {
+    pub fn get_by_path(path: &str) -> &str {
+        get_by_extension(path.split(".").last().unwrap_or_default())
+    }
+
+    pub fn get_by_extension(extension: &str) -> &str {
+        match extension {
+            "html" => "text/html",
+            "htm" => "text/html",
+            "css" => "text/css",
+            "js" => "text/javascript",
+            _ => "text/plain",
+        }
     }
 }
 

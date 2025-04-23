@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::modules::{
-    file::{get_mime, read_file_vec},
+    file::{mime, read_file_vec},
     http::{response_bytes, response_string, Status},
 };
 
@@ -51,7 +51,7 @@ pub fn handle_client(mut stream: TcpStream) -> io::Result<()> {
                     Status::Code200OK,
                     HashMap::from([(
                         "Content-Type".to_string(),
-                        get_mime(http_path.split(".").last().unwrap_or_default()).to_string(),
+                        mime::get_by_path(http_path).to_string(),
                     )]),
                     data,
                 ),
