@@ -10,8 +10,8 @@ pub fn get_mime(extension: &str) -> &str {
     }
 }
 
-pub fn read_file_vec(filepath: &str) -> Result<String, Box<dyn std::error::Error>> {
+pub fn read_file_vec(filepath: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     let path = Path::new(filepath);
-    let data = fs::read_to_string(path)?;
+    let data = fs::read(path)?;
     Ok(data)
 }

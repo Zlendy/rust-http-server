@@ -5,12 +5,11 @@ use std::{
 
 use crate::modules::{
     file::{get_mime, read_file_vec},
-    http::{http_200, HTTP_404, HTTP_405},
-    vec::{slice_to_bytes_vec, slice_to_vec},
+    http::{response_bytes, response_string, Status},
 };
 
-fn write_response(stream: &mut TcpStream, payload: Vec<String>) {
-    match stream.write(slice_to_bytes_vec(payload).as_slice()) {
+fn write_response(stream: &mut TcpStream, payload: Vec<u8>) {
+    match stream.write(payload.as_slice()) {
         Ok(_) => {}
         Err(data) => {
             println!("{:#?}", data);
@@ -32,20 +31,40 @@ pub fn handle_client(mut stream: TcpStream) -> io::Result<()> {
     let line1: Vec<&str> = http_request[0].split(" ").into_iter().collect();
     let (http_method, http_path, _http_version) = (line1[0], line1[1], line1[2]);
     if http_method != "GET" {
-        write_response(&mut stream, slice_to_vec(&HTTP_405));
+        write_response(
+            &mut stream,
+            response_string(
+                Status::Code405MethodNotAllowed,
+                vec![],
+                "This server only accepts GET requests".to_string(),
+            ),
+        );
         return Ok(());
     }
 
     match read_file_vec(format!("./public{}", http_path).as_str()) {
         Ok(data) => {
-            let payload = http_200(
-                get_mime(http_path.split(".").last().unwrap_or_default()),
-                vec![data.lines().collect()],
+            write_response(
+                &mut stream,
+                response_bytes(
+                    Status::Code200OK,
+                    vec![format!(
+                        "Content-Type: {}",
+                        get_mime(http_path.split(".").last().unwrap_or_default())
+                    )],
+                    data,
+                ),
             );
-            write_response(&mut stream, payload);
         }
         Err(_) => {
-            write_response(&mut stream, slice_to_vec(&HTTP_404));
+            write_response(
+                &mut stream,
+                response_string(
+                    Status::Code404NotFound,
+                    vec![],
+                    "The requested resource was not found on this server".to_string(),
+                ),
+            );
         }
     }
 
