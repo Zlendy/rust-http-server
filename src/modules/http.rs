@@ -28,15 +28,12 @@ pub fn response_string(status: Status, headers: HashMap<String, String>, body: S
 
 pub fn response_bytes(
     status: Status,
-    headers: HashMap<String, String>,
+    mut headers: HashMap<String, String>,
     mut body: Vec<u8>,
 ) -> Vec<u8> {
-    let mut data: Vec<String> = [
-        format!("HTTP/1.1 {}", status.to_string()).as_str(),
-        "Server: rust-http-server",
-    ]
-    .map(|line| line.to_string())
-    .to_vec();
+    let mut data: Vec<String> = vec![format!("HTTP/1.1 {}", status.to_string())];
+
+    headers.insert("Server".to_string(), "rust-http-server".to_string());
 
     let mut headers: Vec<String> = headers
         .into_iter()
