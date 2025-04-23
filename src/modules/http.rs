@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[allow(dead_code)]
 pub enum Status {
     Code200OK = 200,
@@ -19,18 +21,27 @@ impl ToString for Status {
     }
 }
 
-pub fn response_string(status: Status, headers: Vec<String>, body: String) -> Vec<u8> {
+pub fn response_string(status: Status, headers: HashMap<String, String>, body: String) -> Vec<u8> {
     let body: Vec<u8> = body.as_bytes().to_vec();
     response_bytes(status, headers, body)
 }
 
-pub fn response_bytes(status: Status, mut headers: Vec<String>, mut body: Vec<u8>) -> Vec<u8> {
-    let mut data = [
+pub fn response_bytes(
+    status: Status,
+    headers: HashMap<String, String>,
+    mut body: Vec<u8>,
+) -> Vec<u8> {
+    let mut data: Vec<String> = [
         format!("HTTP/1.1 {}", status.to_string()).as_str(),
         "Server: rust-http-server",
     ]
     .map(|line| line.to_string())
     .to_vec();
+
+    let mut headers: Vec<String> = headers
+        .into_iter()
+        .map(|(key, value)| format!("{}: {}", key, value))
+        .collect();
 
     data.append(&mut headers);
     data.push("\n".to_string());

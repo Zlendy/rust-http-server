@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     io::{self, BufRead, BufReader, Write},
     net::TcpStream,
 };
@@ -35,7 +36,7 @@ pub fn handle_client(mut stream: TcpStream) -> io::Result<()> {
             &mut stream,
             response_string(
                 Status::Code405MethodNotAllowed,
-                vec![],
+                HashMap::new(),
                 "This server only accepts GET requests".to_string(),
             ),
         );
@@ -48,10 +49,10 @@ pub fn handle_client(mut stream: TcpStream) -> io::Result<()> {
                 &mut stream,
                 response_bytes(
                     Status::Code200OK,
-                    vec![format!(
-                        "Content-Type: {}",
-                        get_mime(http_path.split(".").last().unwrap_or_default())
-                    )],
+                    HashMap::from([(
+                        "Content-Type".to_string(),
+                        get_mime(http_path.split(".").last().unwrap_or_default()).to_string(),
+                    )]),
                     data,
                 ),
             );
@@ -61,7 +62,7 @@ pub fn handle_client(mut stream: TcpStream) -> io::Result<()> {
                 &mut stream,
                 response_string(
                     Status::Code404NotFound,
-                    vec![],
+                    HashMap::new(),
                     "The requested resource was not found on this server".to_string(),
                 ),
             );
