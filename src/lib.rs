@@ -3,7 +3,7 @@ mod modules;
 use crate::modules::stream::handle_client;
 use std::{io, net::TcpListener};
 
-pub fn listen(address: &str) -> io::Result<()> {
+pub fn listen(address: &str, directory: &str) -> io::Result<()> {
     let listener = TcpListener::bind(address)?;
     listener
         .set_nonblocking(true)
@@ -15,7 +15,7 @@ pub fn listen(address: &str) -> io::Result<()> {
         match stream {
             Ok(s) => {
                 // do something with the TcpStream
-                let _ = handle_client(s);
+                let _ = handle_client(s, directory);
             }
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
                 // wait until network socket is ready, typically implemented

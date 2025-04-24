@@ -18,7 +18,7 @@ fn write_response(stream: &mut TcpStream, payload: Vec<u8>) {
     }
 }
 
-pub fn handle_client(mut stream: TcpStream) -> io::Result<()> {
+pub fn handle_client(mut stream: TcpStream, directory: &str) -> io::Result<()> {
     let reader = BufReader::new(stream.try_clone()?);
 
     let http_request: Vec<String> = reader
@@ -43,7 +43,7 @@ pub fn handle_client(mut stream: TcpStream) -> io::Result<()> {
         return Ok(());
     }
 
-    match read_file_vec(format!("./public{}", http_path).as_str()) {
+    match read_file_vec(format!("./{}/public/{}", directory, http_path).as_str()) {
         Ok(data) => {
             write_response(
                 &mut stream,
